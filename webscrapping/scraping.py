@@ -1,5 +1,7 @@
 import requests
+from lxml import html
 from bs4 import BeautifulSoup
+
 
 def get_mamodo_list_links():
     url = 'https://zatchbell.fandom.com/wiki/Mamodos_and_Bookkeepers'
@@ -38,15 +40,28 @@ def get_mamodo_informations(mamodo_id, mamodo):
     id_dupla = mamodo.replace('https://zatchbell.fandom.com/wiki/',"")
 
     response = requests.get(mamodo)
+    tree = html.fromstring(response.content)
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    dupla_nome = soup.select('#'+id_dupla )
-    spells = soup.select('Spells table')
-    print(dupla_nome)
-    print(spells)
+    nome_dupla = tree.xpath('//*[@id="firstHeading"]/span')
+    color_book = tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[1]/b')
+    #age_human = tree.xpath('')
+    #age_mamodo = tree.xpath('')
+    gender_human = tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/div/div/table/tbody/tr[3]/td[3]')
+    gender_mamodo = tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/div/div/table/tbody/tr[3]/td[2]')
+    spell_main_type = tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table[1]/tbody/tr/td[2]/b')
+    spell_secondary_type = tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table[2]/tbody/tr/td[2]/b')
+    ethics = tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[2]/table/tbody/tr[2]/td/b')
 
-    with open('mamodo.html', 'w', encoding="utf-8") as file:
-        file.write(repr(soup))
+    spells = soup.select("[style*='text-align:center;border:2px solid black;color:black; -moz-border-radius:7px;border-radius:7px;background-color:gray;color:white']")
+    spell_1 = tree.xpath('//*[@id="mw-content-text"]/div/table[3]')
+
+    for spell in spells:
+        print(spell)
+        print("--------------------------------------------------------------")
+
+    #print(ethics[0].text)
+
 
 def get_spell_informations():
     pass
