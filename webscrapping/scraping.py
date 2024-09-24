@@ -46,14 +46,10 @@ def get_mamodo_informations(mamodo_id, mamodo):
     soup = BeautifulSoup(response.content, 'html.parser')
 
     duo_name = extract_text(tree.xpath('//*[@id="firstHeading"]/span'))
-    color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[1]/b'))
-    if color_book is None:
-        color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[1]/b'))
-    if color_book is None:
-        color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/table/tbody/tr[2]/td[1]/b'))
-
-    gender_human = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/div/div/table/tbody/tr[3]/td[3]'))
-    gender_mamodo = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/div/div/table/tbody/tr[3]/td[2]'))
+    color_book = extract_color_book_from_tree(tree)        
+    gender_mamodo = extract_mamodo_gender_from_tree(tree)
+    gender_human = get_human_gender_from_tree(tree)
+    
     spell_main_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table[1]/tbody/tr/td[2]/b'))
     spell_secondary_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table[2]/tbody/tr/td[2]/b'))
     ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[2]/table/tbody/tr[2]/td/b'))
@@ -71,6 +67,7 @@ def get_mamodo_informations(mamodo_id, mamodo):
     "ethics": ethics
 }
     json_data = json.dumps(duo_data)
+    #if duo_data['gender_mamodo'] == None:
     print(json_data)
 
     #for spell in spells:
@@ -123,7 +120,6 @@ def extract_spell_data(soup_element):
 # Exemplo de uso com um elemento BeautifulSoup já processado
 # Supondo que 'soup_element' seja o objeto do tipo <class 'bs4.element.Tag'> que você já processou
 # extract_spell_data(soup_element)
-
 
 def extract_text(element_list):
     if element_list and len(element_list) > 0:
@@ -192,6 +188,78 @@ def extract_duo_data(url):
 
 def get_spell_informations():
     pass
+
+def extract_color_book_from_tree(tree):
+    
+    color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[1]/b'))
+    if color_book is None:
+        color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[1]/b'))
+    if color_book is None:
+        color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/table/tbody/tr[2]/td[1]/b'))
+    if color_book is None:
+        color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/table/tbody/tr[2]/td[1]/b'))
+    if color_book is None:
+        color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[2]/td/table/tbody/tr[2]/td[1]/b'))
+    if color_book is None:
+        color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[3]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[1]/b'))
+    if color_book == 'The {{{color name}}} Book' or color_book == '' or  color_book == None:
+        color_book = 'unknown'
+    if color_book == 'Age:':
+        color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[3]/td/table/tbody/tr[2]/td[1]/b'))
+
+    color_book = color_book.replace('The','').replace('Book','').strip()
+    
+    return color_book
+
+def extract_mamodo_gender_from_tree(tree):
+    
+    gender_mamodo = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/div/div/table/tbody/tr[3]/td[2]'))
+    
+    if gender_mamodo is None:
+        gender_mamodo = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[2]/td/div/div/table/tbody/tr[3]/td[2]'))
+    if gender_mamodo is None:
+        gender_mamodo = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[3]/tbody/tr[2]/td/div/div/table/tbody/tr[3]/td[2]'))
+    if gender_mamodo is None:
+        gender_mamodo = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[1]/td/table/tbody/tr[7]/td[2]'))
+    if gender_mamodo is None:
+        gender_mamodo = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[1]/td/table/tbody/tr[7]/td[2]'))
+    if gender_mamodo is None:
+        gender_mamodo = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[1]/td/table/tbody/tr[7]/td[2]'))
+    if gender_mamodo is None:
+        gender_mamodo = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/table/tbody/tr[3]/td[2]'))
+    if gender_mamodo is None:
+        gender_mamodo = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[2]/td/table/tbody/tr[3]/td[3]'))
+    if gender_mamodo is None:
+        gender_mamodo = 'unknown'
+    
+
+    return gender_mamodo
+
+def get_human_gender_from_tree(tree):
+    
+    gender_human = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/div/div/table/tbody/tr[3]/td[3]'))
+    if gender_human is None:
+        gender_human = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/table/tbody/tr[3]/td[3]'))
+    if gender_human is None:
+        gender_human = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[1]/td/table/tbody/tr[13]/td[2]'))
+    if gender_human is None:
+        gender_human = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[2]/td/div/div/table/tbody/tr[3]/td[3]'))
+    if gender_human is None:
+        gender_human = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[3]/tbody/tr[2]/td/div/div/table/tbody/tr[3]/td[3]'))
+    if gender_human is None:
+        gender_human = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[1]/td/table/tbody/tr[13]/td[2]'))
+    if gender_human is None:
+        gender_human = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[1]/td/table/tbody/tr[13]/td[2]'))
+    if gender_human is None:
+        gender_human = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[2]/td/table/tbody/tr[3]/td[3]'))
+    if gender_human is None:
+        gender_human = 'unknown'
+
+    return gender_human
+
+
+
+
 
 #get_mamodo_list_links()
 #get_mamodo_informations()
