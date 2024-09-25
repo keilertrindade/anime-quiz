@@ -4,6 +4,7 @@ import requests
 from lxml import html
 from bs4 import BeautifulSoup
 
+count = 0
 
 def get_mamodo_list_links():
     url = 'https://zatchbell.fandom.com/wiki/Mamodos_and_Bookkeepers'
@@ -41,6 +42,8 @@ def get_mamodo_informations(mamodo_id, mamodo):
     #Remover parte do link para ter o Id do nome da dupla
     #id_dupla = mamodo.replace('https://zatchbell.fandom.com/wiki/',"")
 
+    global count
+
     response = requests.get(mamodo)
     tree = html.fromstring(response.content)
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -49,10 +52,9 @@ def get_mamodo_informations(mamodo_id, mamodo):
     color_book = extract_color_book_from_tree(tree)        
     gender_mamodo = extract_mamodo_gender_from_tree(tree)
     gender_human = get_human_gender_from_tree(tree)
-    
-    spell_main_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table[1]/tbody/tr/td[2]/b'))
-    spell_secondary_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table[2]/tbody/tr/td[2]/b'))
-    ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[2]/table/tbody/tr[2]/td/b'))
+    spell_main_type = extract_spell_main_type_from_tree(tree)
+    spell_secondary_type = extract_spell_secondary_type_from_tree(tree)
+    ethics = extract_ethics_from_tree(tree)
 
     spells = soup.select("[style*='text-align:center;border:2px solid black;color:black; -moz-border-radius:7px;border-radius:7px;background-color:gray;color:white']")
     spell_1 = tree.xpath('//*[@id="mw-content-text"]/div/table[3]')
@@ -67,9 +69,10 @@ def get_mamodo_informations(mamodo_id, mamodo):
     "ethics": ethics
 }
     json_data = json.dumps(duo_data)
-    #if duo_data['gender_mamodo'] == None:
+    #if duo_data['ethics'] == None:
+    count = count + 1
     print(json_data)
-
+    
     #for spell in spells:
     #    extract_spell_data(spell)
         #print(spell)
@@ -117,15 +120,10 @@ def extract_spell_data(soup_element):
     json_output = json.dumps(spell_data, indent=4)
     print(json_output)
 
-# Exemplo de uso com um elemento BeautifulSoup já processado
-# Supondo que 'soup_element' seja o objeto do tipo <class 'bs4.element.Tag'> que você já processou
-# extract_spell_data(soup_element)
-
 def extract_text(element_list):
     if element_list and len(element_list) > 0:
         return element_list[0].text_content().strip()  # Usa text_content() para extrair o texto
     return None
-
 
 def extract_duo_data(url):
     # Fazer a requisição à página do link
@@ -186,9 +184,6 @@ def extract_duo_data(url):
     #return duo_data
     print(duo_data)
 
-def get_spell_informations():
-    pass
-
 def extract_color_book_from_tree(tree):
     
     color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[1]/b'))
@@ -202,13 +197,16 @@ def extract_color_book_from_tree(tree):
         color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[2]/td/table/tbody/tr[2]/td[1]/b'))
     if color_book is None:
         color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[3]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[1]/b'))
+    if color_book is None:
+         #color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/p[5]'))
+        pass   
     if color_book == 'The {{{color name}}} Book' or color_book == '' or  color_book == None:
         color_book = 'unknown'
     if color_book == 'Age:':
         color_book = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[3]/td/table/tbody/tr[2]/td[1]/b'))
 
     color_book = color_book.replace('The','').replace('Book','').strip()
-    
+        
     return color_book
 
 def extract_mamodo_gender_from_tree(tree):
@@ -232,7 +230,6 @@ def extract_mamodo_gender_from_tree(tree):
     if gender_mamodo is None:
         gender_mamodo = 'unknown'
     
-
     return gender_mamodo
 
 def get_human_gender_from_tree(tree):
@@ -254,14 +251,82 @@ def get_human_gender_from_tree(tree):
         gender_human = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[2]/td/table/tbody/tr[3]/td[3]'))
     if gender_human is None:
         gender_human = 'unknown'
-
     return gender_human
 
+def extract_spell_main_type_from_tree(tree):
+
+   spell_main_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table[1]/tbody/tr/td[2]/b'))
+   
+   if spell_main_type is None:
+        spell_main_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table/tbody/tr/td[2]/b'))
+   if spell_main_type is None:
+        spell_main_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[3]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table[1]/tbody/tr/td[2]/b'))
+   if spell_main_type is None:
+        spell_main_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/table/tbody/tr[6]/td/table/tbody/tr/td[2]/b'))
+   if spell_main_type is None:
+        spell_main_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table/tbody/tr/td/b'))
+   if spell_main_type is None:
+        spell_main_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table/tbody/tr[2]/td/table/tbody/tr[6]/td/table/tbody/tr/td[2]/b'))
+   if spell_main_type is None:
+        spell_main_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[2]/td/table/tbody/tr[6]/td/table/tbody/tr/td[2]/b'))
+   if spell_main_type is None:
+        spell_main_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/table/tbody/tr[6]/td/table/tbody/tr/td[2]/b'))
+   if spell_main_type is None:
+        spell_main_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[2]/td/table/tbody/tr[6]/td/table/tbody/tr/td/b'))
+   if spell_main_type is None:
+        spell_main_type = 'Unknown Element'
+
+   return spell_main_type
+
+def extract_spell_secondary_type_from_tree(tree):
+    spell_secondary_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table[2]/tbody/tr/td[2]/b'))
+
+    if spell_secondary_type is None:
+        spell_secondary_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[3]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table[2]/tbody/tr/td[2]/b'))
+    if spell_secondary_type is None:
+        spell_secondary_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[3]/tbody/tr[3]/td/div/div/table/tbody/tr[6]/td/table[2]/tbody/tr/td[2]/b'))
+    if spell_secondary_type is None:
+        spell_secondary_type = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/table/tbody/tr[6]/td/table[2]/tbody/tr/td[2]/b'))
+        
+    if spell_secondary_type is None:
+        #spell_secondary_type = extract_text(tree.xpath(''))
+        pass
+    if spell_secondary_type is None:
+        #spell_secondary_type = extract_text(tree.xpath(''))
+        pass
+
+def extract_ethics_from_tree(tree):
+    ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[2]/table/tbody/tr[2]/td/b'))
+
+    if ethics is None:
+        ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[2]/table/tbody/tr[2]/td/b'))
+    if ethics is None:
+        ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td[2]/b'))
+    if ethics is None:
+        ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[3]/tbody/tr[3]/td/div/div/table/tbody/tr[2]/td[2]/table/tbody/tr[2]/td/b'))
+    if ethics is None:
+        ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/table/tbody/tr[2]/td[2]/table/tbody/tr[2]/td/b'))
+    if ethics is None:
+        ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[3]/td/table/tbody/tr[2]/td[2]/table[2]/tbody/tr/td[2]/b'))
+    if ethics is None:
+        ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[2]/tbody/tr[2]/td/table/tbody/tr[2]/td[2]/table/tbody/tr[2]/td/b'))
+    if ethics is None:
+        ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[2]/td/table/tbody/tr[2]/td[2]/table/tbody/tr[2]/td/b'))
+    if ethics is None:
+        ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/p[4]'))
+    if ethics is None:
+        ethics = extract_text(tree.xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[3]/td/table/tbody/tr[2]/td[2]/table/tbody/tr[2]/td/b'))        
+    if ethics is None:
+        ethics = 'evil'
+    if ethics != 'Good' and ethics and 'Neutral' and ethics != 'Evil':
+        ethics = 'Evil'
+    #if ethics is None:
+    #    ethics = extract_text(tree.xpath(''))
+
+    return ethics
 
 
-
-
-#get_mamodo_list_links()
-#get_mamodo_informations()
 
 get_mamodo_link_in_list()
+print('--------------------------------------')
+print(count)
